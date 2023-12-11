@@ -1,0 +1,109 @@
+---
+title: "Heatmap"
+author: "Can Plant Think"
+date: "2023-12-05"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Il manque :
+Importation tabac/tournesol
+Labelling function tabac/tournesol
+Changer le sens des graphs (les inverser)
+Transformer les frames en temps 
+Chager les labels our tournesol et tabac
+Ajouter Est-Ouest qq part sur le graph
+
+
+
+
+## Packages
+
+```{r lib}
+# library
+library(ggplot2)
+library(tidyverse)
+
+# importation of the datas
+
+
+```
+
+## Importation
+
+```{r importation}
+
+#Arabidopsis
+
+arabido <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\Autres dossiers\\Sup Agro\\2ème année\\Recherche\\R\\Arabidopsis_thaliana_training.AVI.predictions.000_Arabidopsis_thaliana_training.analysis.csv", header = TRUE, sep = ";")
+
+#Tabac
+
+#Tournesol
+```
+
+## Fonction for labelling
+
+
+```{r function, echo=FALSE}
+
+# Function to create labels for specific points
+
+# arabidopsis
+create_labels <- function(arabido, point_name) {
+  label_data <- arabido %>% 
+    group_by(track) %>% 
+    summarise(
+      label_positionx = max(get(paste0(point_name, ".x"))),
+      label_positiony = max(get(paste0(point_name, ".y"))),
+      label_value = point_name
+    ) %>%
+    merge(arabido[, c("track", "frame_idx")], by = "track", all.x = TRUE)
+  
+  return(label_data)
+}
+```
+
+
+## Heatmap plots
+# Arabidopsis
+
+```{r heatmap}
+for (track_val in unique(arabido$track)) {
+  track_data <- filter(arabido, track == track_val)
+  
+  heatmap_plot <- ggplot(track_data, aes(x = Leaf_1E.x, y = Leaf_1E.y, color = frame_idx)) +
+    geom_point(aes(x = Leaf_4E.x, y = Leaf_4E.y, color = frame_idx), size = 1) +
+    geom_point(aes(x = Leaf_2I.x, y = Leaf_2I.y, color = frame_idx), size = 1) +
+    geom_point(aes(x = Leaf_3I.x, y = Leaf_3I.y, color = frame_idx), size = 1) +
+    geom_point(aes(x = Base_AT.x, y = Base_AT.y, color = frame_idx), size = 1) +
+    geom_point(size = 1) +
+    geom_tile(linewidth = 2, height = 2) +
+    scale_color_gradient(low = "#00f0af", high = "#238679") +
+    labs(x = "X", y = "Y") +
+    labs(title = paste("Position of plants in", track_val))
+  
+  # Add labels for specific points
+  label_points <- c("Base_AT", "Leaf_1E", "Leaf_2I", "Leaf_3I", "Leaf_4E")
+  for (point in label_points) {
+    label_data <- create_labels(track_data, point)
+    heatmap_plot <- heatmap_plot +
+      geom_text(
+        data = label_data,
+        aes(x = label_positionx, y = label_positiony, label = label_value),
+        vjust = 0
+      )
+  }
+  
+  heatmap_plots[[track_val]] <- heatmap_plot
+}
+
+# Print or display the individual heatmap plots
+for (i in seq_along(heatmap_plots)) {
+  print(heatmap_plots[[i]])
+}
+```
+
