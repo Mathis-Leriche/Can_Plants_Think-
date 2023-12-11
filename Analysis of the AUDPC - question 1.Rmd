@@ -1,0 +1,152 @@
+---
+title: "Analysis of the AUDPC (Area Under the Disease in Progress Cruve) "
+author: "Can Plant Think"
+date: "2023-12-05"
+output:
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Arabidopsis Thaliana : AUDPC question 1
+
+## Library
+
+```{r library}
+library(ggplot2)
+library(agricolae)
+library(patchwork)
+```
+
+## Importation and datas
+
+```{r datas}
+data_temoin <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\Autres dossiers\\Sup Agro\\2ème année\\Recherche\\R\\ATS1P2_angles_result_training.csv", header = T, sep= ",")
+
+data_perturb <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\Autres dossiers\\Sup Agro\\2ème année\\Recherche\\R\\ATS1P2_angles_result_training.csv", header = T, sep= ",")
+data_perturb <- cbind(data_perturb[1:16]*1.05, data_perturb[17])
+
+result_audpc_temoin <- data.frame(track = character(), "Angle 1E.4E" = numeric(), "Angle 2I.3I" = numeric(), "Angle E.Y" = numeric(), "Angle I.Y" = numeric(), stringsAsFactors = FALSE)
+result_audpc_perturb <- data.frame(track = character(), "Angle 1E.4E" = numeric(), "Angle 2I.3I" = numeric(), "Angle E.Y" = numeric(), "Angle I.Y" = numeric(), stringsAsFactors = FALSE)
+
+result_Student <- data.frame("Angle 1E.4E" = rep(0, times = 10), "Angle 2I.3I" = rep(0, times = 10), "Angle E.Y" = rep(0, times = 10), "Angle I.Y" = rep(0, times = 10), stringsAsFactors = FALSE)
+rownames(result_Student) <- c("shapiro_temoin_W","shapiro_temoin_p_value", "shapiro_perturb_W","shapiro_perturb_p_value", "variance_W", "variance_p_value", "student_t", "student_p_value", "student_interval_low", "student_interval_high")
+
+```
+
+# Question 1 : difference in angle between plants of the same position
+
+## Area Under Disease Progress Curve (AUDPC)
+
+```{r AUDPC_1, echo=FALSE}
+
+for (track in 0:3) {
+  #creating a table of data with only one track at a time
+  low = 4*track + 1
+  high = low + 3
+  column_indices <- c(low:high, 17)
+  cname <- c("Angle 1E.4E", "Angle 2I.3I", "Angle E.Y","Angle I.Y", "time")
+  track_data_t <- data_temoin[, column_indices, drop = FALSE]
+  colnames(track_data_t) <-  cname
+  track_data_p <- data_perturb[, column_indices, drop = FALSE]
+  colnames(track_data_p) <-  cname
+  
+  #transforming time in a different class so it's possible to plot
+  track_data_t$time <- as.POSIXct(track_data_t$time, format = "%Y-%m-%d %H:%M:%S")
+  track_data_p$time <- as.POSIXct(track_data_p$time, format = "%Y-%m-%d %H:%M:%S")
+
+  #initializing the list "track" that will be added as a row later on in the result_aupdc_temoin
+  track_t <- list(track = paste0("track_",track), "Angle.1E.4E" = 0, "Angle.2I.3I" = 0, "Angle.E.Y" = 0, "Angle.I.Y" = 0)
+  track_p <- list(track = paste0("track_",track), "Angle.1E.4E" = 0, "Angle.2I.3I" = 0, "Angle.E.Y" = 0, "Angle.I.Y" = 0)
+  
+  #plot
+  plot_t <- ggplot(data = track_data_t, aes(x = time))
+  if (!all(is.na(track_data_t[, "Angle 1E.4E"]))) {
+    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle 1E.4E"], color = "Angle 1E.4E"), size = 1) 
+  }
+  if (!all(is.na(track_data_t[, "Angle 2I.3I"]))) {
+    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle 2I.3I"], color = "Angle 2I.3I"), size = 1)
+  }
+  if (!all(is.na(track_data_t[, "Angle E.Y"]))) {
+    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle E.Y"], color = "Angle E.Y"), size = 1)
+  }
+  if (!all(is.na(track_data_t[, "Angle I.Y"]))) {
+    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle I.Y"], color = "Angle I.Y"), size = 1)
+  }
+    plot_t <- plot_t + 
+      scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd", "#2a52be")) + 
+      labs(title = paste("Angle against time in plant ", track, "in normal conditions"), x = "Time", y ="Angle")
+  
+      
+  plot_p <- ggplot(data = track_data_p, aes(x = time))
+  if (!all(is.na(track_data_p[, "Angle 1E.4E"]))) {
+    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle 1E.4E"], color = "Angle 1E.4E"), size = 1) 
+  }
+  if (!all(is.na(track_data_p[, "Angle 2I.3I"]))) {
+    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle 2I.3I"], color = "Angle 2I.3I"), size = 1)
+  }
+  if (!all(is.na(track_data_p[, "Angle E.Y"]))) {
+    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle E.Y"], color = "Angle E.Y"), size = 1)
+  }
+  if (!all(is.na(track_data_p[, "Angle I.Y"]))) {
+    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle I.Y"], color = "Angle I.Y"), size = 1)
+  }
+  plot_p <- plot_p + 
+    scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd", "#2a52be")) + 
+    labs(title = paste("Angle against time in plant track_", track, "in changed conditions"), x = "Time", y = "Angle")
+  
+  grid <- plot_t + plot_p + plot_layout(ncol = 1, heights = c(1, 1)) +
+  plot_annotation(title = paste("Difference in angles between normal and changed conditions in track_",track))
+  print(grid)
+  
+  #audpc
+  for (i in 1:4) {
+    audpc_result_t <- ifelse(all(is.na(track_data_t[, i])), NA, audpc(track_data_t[, i], track_data_t$time, type = "absolute"))
+    audpc_result_p <- ifelse(all(is.na(track_data_p[, i])), NA, audpc(track_data_p[, i], track_data_p$time, type = "absolute"))
+    
+    track_t[i+1] <- audpc_result_t
+    track_p[i+1] <- audpc_result_p
+  }
+  
+  result_audpc_temoin <- rbind(result_audpc_temoin, track_t)
+  result_audpc_perturb <- rbind(result_audpc_perturb, track_p)
+
+}
+print(result_audpc_temoin)
+```
+
+## Analysis of the results - Student test
+
+```{r Student_1, echo = false}
+for (i in 2:5) {
+  data_t <- as.numeric(result_audpc_temoin[[i]])
+  data_p <- as.numeric(result_audpc_perturb[[i]])
+  
+  complete_cases <- complete.cases(data_t, data_p)
+  data_t <- data_t[complete_cases]
+  data_p <- data_p[complete_cases]
+  #verifying normality
+  result_Student["shapiro_temoin_p_value", i-1] <- shapiro.test(data_t)$p.value 
+  result_Student["shapiro_temoin_W", i-1] <- shapiro.test(data_t)$statistic
+  result_Student["shapiro_perturb_p_value", i-1] <- shapiro.test(data_p) 
+  result_Student["shapiro_perturb_W", i-1] <- shapiro.test(data_t)$statistic
+  
+  #variance test
+  result_Student["variance_p_value", i-1] <- var.test(data_t, data_p)$p.value
+  result_Student["variance_W", i-1] <- var.test(data_t, data_p)$statistic
+
+  #Student test when the variables are 
+  result_Student["student_p_value", i-1] <- t.test(data_t,data_p, paired=T)$p.value
+  result_Student["student_t", i-1] <- t.test(data_t,data_p, paired=T)$statistic
+  result_Student["student_interval_low", i-1] <- t.test(data_t,data_p, paired=T)$conf.int[1]
+  result_Student["student_interval_high", i-1] <- t.test(data_t,data_p, paired=T)$conf.int[2]
+
+}
+
+print(result_Student)
+
+
+
+```
+
