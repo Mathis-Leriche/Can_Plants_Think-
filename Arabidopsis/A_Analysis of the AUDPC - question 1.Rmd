@@ -76,7 +76,7 @@ for (track in 0:3) {
   }
     plot_t <- plot_t + 
       scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd", "#2a52be")) + 
-      labs(title = paste("Angle against time in plant ", track, "in normal conditions"), x = "Time", y ="Angle")
+      labs(title = paste("Angle against time in arabidopsis ", track, "in normal conditions"), x = "Time", y ="Angle")
   
       
   plot_p <- ggplot(data = track_data_p, aes(x = time))
@@ -94,10 +94,10 @@ for (track in 0:3) {
   }
   plot_p <- plot_p + 
     scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd", "#2a52be")) + 
-    labs(title = paste("Angle against time in plant track_", track, "in changed conditions"), x = "Time", y = "Angle")
+    labs(title = paste("Angle against time in arabidopsis ", track, "in changed conditions"), x = "Time", y = "Angle")
   
   grid <- plot_t + plot_p + plot_layout(ncol = 1, heights = c(1, 1)) +
-  plot_annotation(title = paste("Difference in angles between normal and changed conditions in track_",track))
+  plot_annotation(title = paste("Difference in angles between normal and changed conditions in arabidopsis ",track))
   print(grid)
   
   #audpc

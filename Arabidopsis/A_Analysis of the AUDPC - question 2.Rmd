@@ -73,7 +73,7 @@ for (position in 1:3) {
   }
   plot_t <- plot_t +
     scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd", "#2a52be")) +
-    labs(title = paste("Angle against time for plants in position ", position, "in normal conditions"), x = "Time", y ="Angle")
+    labs(title = paste("Angle against time for arabidopsis in position ", position, "in normal conditions"), x = "Time", y ="Angle")
 
   plot_p <- ggplot(data = position_data_p, aes(x = time))
   if (!all(is.na(position_data_p[, "Angle 1E.4E"]))) {
@@ -90,10 +90,10 @@ for (position in 1:3) {
   }
   plot_p <- plot_p +
     scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd", "#2a52be")) +
-    labs(title = paste("Angle against time for plants in position", position, "in changed conditions"), x = "Time", y = "Angle")
+    labs(title = paste("Angle against time for arabidopsis in position", position, "in changed conditions"), x = "Time", y = "Angle")
 
   grid <- plot_t + plot_p + plot_layout(ncol = 1, heights = c(1, 1)) +
-    plot_annotation(title = paste("Difference in angles between normal and changed conditions in position", position))
+    plot_annotation(title = paste("Difference in angles between normal and changed conditions for arabidopsis in position", position))
   print(grid)
 
   # audpc
