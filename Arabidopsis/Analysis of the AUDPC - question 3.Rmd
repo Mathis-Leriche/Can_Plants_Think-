@@ -8,7 +8,29 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+# Arabidopsis Thaliana : AUDPC question 3
 
+## Library
+
+```{r library}
+library(ggplot2)
+library(agricolae)
+library(patchwork)
+```
+
+## Importation and datas
+```{r datas}
+data_temoin <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\Autres dossiers\\Sup Agro\\2ème année\\Recherche\\R\\ATS1P2_angles_result_training.csv", header = T, sep= ",")[17:21]
+data_temoin <- cbind(data_temoin, data_temoin[2:5]+15, data_temoin[2:5]*1.05)
+data_perturb <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\Autres dossiers\\Sup Agro\\2ème année\\Recherche\\R\\ATS1P2_angles_result_training.csv", header = T, sep= ",")[17:21]
+data_perturb <- cbind(data_perturb, data_perturb[2:5]+15, data_temoin[2:5]*1.05)
+
+result_audpc_temoin <- data.frame(track = character(), "Angle 1E.4E" = numeric(), "Angle 2I.3I" = numeric(), "Angle E.Y" = numeric(), "Angle I.Y" = numeric(), stringsAsFactors = FALSE)
+result_audpc_perturb <- data.frame(track = character(), "Angle 1E.4E" = numeric(), "Angle 2I.3I" = numeric(), "Angle E.Y" = numeric(), "Angle I.Y" = numeric(), stringsAsFactors = FALSE)
+
+result_Student <- data.frame("Angle 1E.4E" = rep(0, times = 10), "Angle 2I.3I" = rep(0, times = 10), "Angle E.Y" = rep(0, times = 10), "Angle I.Y" = rep(0, times = 10), stringsAsFactors = FALSE)
+rownames(result_Student) <- c("shapiro_temoin_W","shapiro_temoin_p_value", "shapiro_perturb_W","shapiro_perturb_p_value", "variance_W", "variance_p_value", "student_t", "student_p_value", "student_interval_low", "student_interval_high")
+```
 # Question 3 : difference in angles between species
 
 ## AUDPC
