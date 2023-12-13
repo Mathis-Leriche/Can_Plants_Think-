@@ -9,16 +9,6 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Il manque :
-Importation tabac/tournesol
-Labelling function tabac/tournesol
-Changer le sens des graphs (les inverser)
-Transformer les frames en temps 
-Chager les labels our tournesol et tabac
-Ajouter Est-Ouest qq part sur le graph
-
-
-
 
 ## Packages
 
@@ -40,9 +30,6 @@ library(tidyverse)
 
 arabido <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\Autres dossiers\\Sup Agro\\2ème année\\Recherche\\R\\Arabidopsis_thaliana_training.AVI.predictions.000_Arabidopsis_thaliana_training.analysis.csv", header = TRUE, sep = ";")
 
-#Tabac
-
-#Tournesol
 ```
 
 ## Fonction for labelling
@@ -84,7 +71,7 @@ for (track_val in unique(arabido$track)) {
     geom_tile(linewidth = 2, height = 2) +
     scale_color_gradient(low = "#00f0af", high = "#238679") +
     labs(x = "X", y = "Y") +
-    labs(title = paste("Position of plants in", track_val))
+    labs(title = paste("Position of arabisopsis in", track_val))
   
   # Add labels for specific points
   label_points <- c("Base_AT", "Leaf_1E", "Leaf_2I", "Leaf_3I", "Leaf_4E")
