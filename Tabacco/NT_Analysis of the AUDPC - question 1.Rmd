@@ -17,14 +17,20 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(agricolae)
 library(patchwork)
+library(tidyverse)
 ```
 
 ## Importation and datas
 
-```{r datas}
-data_temoin <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\Autres dossiers\\Sup Agro\\2ème année\\Recherche\\R\\ATS1P2_angles_result_training.csv", header = T, sep= ",")
+```{r datas_a}
+data <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\GitHub\\Artificial intelligence\\Can_Plants_Think-\\Tabacco\\Angles_NTS2P4.csv", header = T, sep= ",")
+data$time <- as.POSIXct(data$time, format = "%Y-%m-%d %H:%M:%S")
 
-data_perturb <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\Autres dossiers\\Sup Agro\\2ème année\\Recherche\\R\\ATS1P2_angles_result_training.csv", header = T, sep= ",")
+data_temoin <- data %>%
+  filter(time <= "2023-12-12 17:00:00")
+
+data_perturb <- data %>%
+  filter(time >= "2023-12-12 17:00:00")
 
 result_audpc_temoin <- data.frame(track = character(), "Angle L1.Y" = numeric(), "Angle L2.Y" = numeric(), "Angle L3.Y" = numeric(), "Angle IN3.Y" = numeric(), stringsAsFactors = FALSE)
 result_audpc_perturb <- data.frame(track = character(), "Angle L1.Y" = numeric(), "Angle L2.Y" = numeric(), "Angle L3.Y" = numeric(), "Angle IN3.Y" = numeric(), stringsAsFactors = FALSE)
@@ -38,13 +44,13 @@ rownames(result_Student) <- c("shapiro_temoin_W","shapiro_temoin_p_value", "shap
 
 ## Area Under Disease Progress Curve (AUDPC)
 
-```{r AUDPC_1, echo=FALSE}
+```{r AUDPC_1_a, echo=FALSE}
 
 for (track in 0:2) {
   #creating a table of data with only one track at a time
   low = 4*track + 1
   high = low + 3
-  column_indices <- c(low:high, //timecolumn//)  #Change here once we have the data
+  column_indices <- c(low:high, 13)  #Change here once we have the data
   cname <- c("Angle L1.Y", "Angle L2.Y", "Angle L3.Y","Angle IN3.Y", "time")
   track_data_t <- data_temoin[, column_indices, drop = FALSE]
   colnames(track_data_t) <-  cname
@@ -62,41 +68,41 @@ for (track in 0:2) {
   #plot
   plot_t <- ggplot(data = track_data_t, aes(x = time))
   if (!all(is.na(track_data_t[, "Angle L1.Y"]))) {
-    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle L1G.L1D"], color = "Angle L1G.L1D"), size = 1) 
+    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle L1.Y"], color = "Angle L1.Y"), size = 1) 
   }
   if (!all(is.na(track_data_t[, "Angle L2.Y"]))) {
-    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle L2G.L2D"], color = "Angle L2G.L2D"), size = 1)
+    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle L2.Y"], color = "Angle L2.Y"), size = 1)
   }
   if (!all(is.na(track_data_t[, "Angle L3.Y"]))) {
-    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle L1.Y"], color = "Angle L1.Y"), size = 1)
+    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle L3.Y"], color = "Angle L3.Y"), size = 1)
   }
   if (!all(is.na(track_data_t[, "Angle IN3.Y"]))) {
-    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle L2.Y"], color = "Angle L2.Y"), size = 1)
+    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle IN3.Y"], color = "Angle IN3.Y"), size = 1)
   }
     plot_t <- plot_t + 
       scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd", "#2a52be")) + 
-      labs(title = paste("Angle against time in tobacco ", track, "in normal conditions"), x = "Time", y ="Angle")
+      labs(title = paste("Angle against time in tobacco ", track + 1, "in normal conditions"), x = "Time", y ="Angle")
   
       
   plot_p <- ggplot(data = track_data_p, aes(x = time))
    if (!all(is.na(track_data_p[, "Angle L1.Y"]))) {
-    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle L1G.L1D"], color = "Angle L1G.L1D"), size = 1) 
+    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle L1.Y"], color = "Angle L1.Y"), size = 1) 
   }
   if (!all(is.na(track_data_p[, "Angle L2.Y"]))) {
-    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle L2G.L2D"], color = "Angle L2G.L2D"), size = 1)
+    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle L2.Y"], color = "Angle L2.Y"), size = 1)
   }
   if (!all(is.na(track_data_p[, "Angle L3.Y"]))) {
-    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle L1.Y"], color = "Angle L1.Y"), size = 1)
+    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle L3.Y"], color = "Angle L3.Y"), size = 1)
   }
   if (!all(is.na(track_data_p[, "Angle IN3.Y"]))) {
-    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle L2.Y"], color = "Angle L2.Y"), size = 1)
+    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle IN3.Y"], color = "Angle IN3.Y"), size = 1)
   }
   plot_p <- plot_p + 
     scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd", "#2a52be")) + 
-    labs(title = paste("Angle against time in tobacco ", track, "in changed conditions"), x = "Time", y = "Angle")
+    labs(title = paste("Angle against time in tobacco ", track + 1, "in changed conditions"), x = "Time", y = "Angle")
   
   grid <- plot_t + plot_p + plot_layout(ncol = 1, heights = c(1, 1)) +
-  plot_annotation(title = paste("Difference in angles between normal and changed conditions in tobacco ",track))
+  plot_annotation(title = paste("Difference in angles between normal and changed conditions in tobacco ",track+1))
   print(grid)
   
   #audpc
@@ -114,7 +120,97 @@ for (track in 0:2) {
 }
 print(result_audpc_temoin)
 ```
+## Importation and datas for the second set
 
+```{r datas_b}
+data <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\GitHub\\Artificial intelligence\\Can_Plants_Think-\\Tabacco\\Angles_NTS2P4.csv", header = T, sep= ",")
+data$time <- as.POSIXct(data$time, format = "%Y-%m-%d %H:%M:%S")
+
+data_temoin <- data %>%
+  filter(time <= "2023-12-12 17:00:00")
+
+data_perturb <- data %>%
+  filter(time >= "2023-12-12 17:00:00")
+```
+
+## Area Under Disease Progress Curve (AUDPC)
+
+```{r AUDPC_1_b, echo=FALSE}
+
+for (track in 0:2) {
+  #creating a table of data with only one track at a time
+  low = 4*track + 1
+  high = low + 3
+  column_indices <- c(low:high, 13)  #Change here once we have the data
+  cname <- c("Angle L1.Y", "Angle L2.Y", "Angle L3.Y","Angle IN3.Y", "time")
+  track_data_t <- data_temoin[, column_indices, drop = FALSE]
+  colnames(track_data_t) <-  cname
+  track_data_p <- data_perturb[, column_indices, drop = FALSE]
+  colnames(track_data_p) <-  cname
+  
+  #transforming time in a different class so it's possible to plot
+  track_data_t$time <- as.POSIXct(track_data_t$time, format = "%Y-%m-%d %H:%M:%S")
+  track_data_p$time <- as.POSIXct(track_data_p$time, format = "%Y-%m-%d %H:%M:%S")
+
+  #initializing the list "track" that will be added as a row later on in the result_aupdc_temoin
+  track_t <- list(track = paste0("track_",track), "Angle.L1.Y" = 0, "Angle.L2.Y" = 0, "Angle.L3.Y" = 0, "Angle.IN3.Y" = 0)
+  track_p <- list(track = paste0("track_",track), "Angle.L1.Y" = 0, "Angle.L2.Y" = 0, "Angle.L3.Y" = 0, "Angle.IN3.Y" = 0)
+  
+  #plot
+  plot_t <- ggplot(data = track_data_t, aes(x = time))
+  if (!all(is.na(track_data_t[, "Angle L1.Y"]))) {
+    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle L1.Y"], color = "Angle L1.Y"), size = 1) 
+  }
+  if (!all(is.na(track_data_t[, "Angle L2.Y"]))) {
+    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle L2.Y"], color = "Angle L2.Y"), size = 1)
+  }
+  if (!all(is.na(track_data_t[, "Angle L3.Y"]))) {
+    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle L3.Y"], color = "Angle L3.Y"), size = 1)
+  }
+  if (!all(is.na(track_data_t[, "Angle IN3.Y"]))) {
+    plot_t <- plot_t + geom_line(aes(y = track_data_t[, "Angle IN3.Y"], color = "Angle IN3.Y"), size = 1)
+  }
+    plot_t <- plot_t + 
+      scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd", "#2a52be")) + 
+      labs(title = paste("Angle against time in tobacco ", track + 1, "in normal conditions"), x = "Time", y ="Angle")
+  
+      
+  plot_p <- ggplot(data = track_data_p, aes(x = time))
+   if (!all(is.na(track_data_p[, "Angle L1.Y"]))) {
+    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle L1.Y"], color = "Angle L1.Y"), size = 1) 
+  }
+  if (!all(is.na(track_data_p[, "Angle L2.Y"]))) {
+    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle L2.Y"], color = "Angle L2.Y"), size = 1)
+  }
+  if (!all(is.na(track_data_p[, "Angle L3.Y"]))) {
+    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle L3.Y"], color = "Angle L3.Y"), size = 1)
+  }
+  if (!all(is.na(track_data_p[, "Angle IN3.Y"]))) {
+    plot_p <- plot_p + geom_line(aes(y = track_data_p[, "Angle IN3.Y"], color = "Angle IN3.Y"), size = 1)
+  }
+  plot_p <- plot_p + 
+    scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd", "#2a52be")) + 
+    labs(title = paste("Angle against time in tobacco ", track + 1, "in changed conditions"), x = "Time", y = "Angle")
+  
+  grid <- plot_t + plot_p + plot_layout(ncol = 1, heights = c(1, 1)) +
+  plot_annotation(title = paste("Difference in angles between normal and changed conditions in tobacco ",track+1))
+  print(grid)
+  
+  #audpc
+  for (i in 1:4) {
+    audpc_result_t <- ifelse(all(is.na(track_data_t[, i])), NA, audpc(track_data_t[, i], track_data_t$time, type = "absolute"))
+    audpc_result_p <- ifelse(all(is.na(track_data_p[, i])), NA, audpc(track_data_p[, i], track_data_p$time, type = "absolute"))
+    
+    track_t[i+1] <- audpc_result_t
+    track_p[i+1] <- audpc_result_p
+  }
+  
+  result_audpc_temoin <- rbind(result_audpc_temoin, track_t)
+  result_audpc_perturb <- rbind(result_audpc_perturb, track_p)
+
+}
+print(result_audpc_temoin)
+```
 ## Analysis of the results - Student test
 
 ```{r Student_1, echo = false}
@@ -122,9 +218,6 @@ for (i in 2:5) {
   data_t <- as.numeric(result_audpc_temoin[[i]])
   data_p <- as.numeric(result_audpc_perturb[[i]])
   
-  complete_cases <- complete.cases(data_t, data_p)
-  data_t <- data_t[complete_cases]
-  data_p <- data_p[complete_cases]
   #verifying normality
   result_Student["shapiro_temoin_p_value", i-1] <- shapiro.test(data_t)$p.value 
   result_Student["shapiro_temoin_W", i-1] <- shapiro.test(data_t)$statistic
