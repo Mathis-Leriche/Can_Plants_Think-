@@ -25,8 +25,8 @@ library(tidyverse)
 
 #Tabacco
 
-tabacco <- data <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\GitHub\\Artificial intelligence\\Can_Plants_Think-\\Tabacco\\NT_S2_P4.csv", header = T, sep= ",")
-heatmap_plots <- list()
+tabacco <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\Autres dossiers\\Sup Agro\\2ème année\\Recherche\\R\\Arabidopsis_thaliana_training.AVI.predictions.000_Arabidopsis_thaliana_training.analysis.csv", header = TRUE, sep = ";")
+
 ```
 
 ## Fonction for labelling
