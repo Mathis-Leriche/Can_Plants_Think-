@@ -15,7 +15,7 @@ library(tidyverse)
 ###data importation
 project.dir<-"C:\\Users\\33646\\OneDrive\\Documents\\GitHub\\Artificial intelligence\\Can_Plants_Think-\\Tabacco" #Don't forget to change the directory depending on the file you are working on
 
-AT_Data_tr<-read.csv(file='NT_S2_P3.csv', header=TRUE, sep= ',')
+AT_Data_tr<-read.csv(file='NT_S2_P4.csv', header=TRUE, sep= ',')
 
 
 ###Pre-visualisation
@@ -121,16 +121,16 @@ angles_df_list[[4]] <- angles_df_IN23.Y
 result_df <- do.call(cbind, angles_df_list)
 
 #From the table created, we separate the angle from each individuals (repetition)
-ind_1<-result_df %>%
-  slice(1:94)%>%
+ind_1 <- result_df %>%
+  filter(row_number() %% 3 == 1) %>%
   rename_all(~paste0("ind_1_", .))
 
-ind_2<-result_df %>%
-  slice(95:189)%>%
+ind_2<- result_df %>%
+  filter(row_number() %% 3 == 2) %>%
   rename_all(~paste0("ind_2_", .))
 
-ind_3<-result_df %>%
-  slice(189:282)%>%
+ind_3 <- result_df %>%
+  filter(row_number() %% 3 == 0) %>%
   rename_all(~paste0("ind_3_", .))
 
 #We put them together by columns
@@ -163,4 +163,5 @@ print(total_mean_angle)
 print(Final_table)
 
 #LAST CSV WITH THE RESULTS
-write.csv(Final_table, "Angles_NTS2P3.csv", row.names = FALSE)
+write.csv(Final_table, "Angles_NTS2P4.csv", row.names = FALSE)
+
