@@ -25,8 +25,10 @@ library(tidyverse)
 
 #Tabacco
 
-tabacco <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\Autres dossiers\\Sup Agro\\2ème année\\Recherche\\R\\Arabidopsis_thaliana_training.AVI.predictions.000_Arabidopsis_thaliana_training.analysis.csv", header = TRUE, sep = ";")
-
+tabacco <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\GitHub\\Artificial intelligence\\Can_Plants_Think-\\Tabacco\\NT_S2_P4.csv", header = TRUE, sep = ",")
+starting_hour <- as.POSIXct("2023-12-08 17:00:00")
+label_compass <- c("East", "West")
+position <- 4
 ```
 
 ## Fonction for labelling
@@ -54,10 +56,157 @@ create_labels <- function(tabacco, point_name) {
 
 ## Heatmap plots
 #Tabacco
+# Heatmap for normal days
+```{r heatmap normal days}
+heatmap_plots <- list()
+max_x_value <-list()
+min_x_value <- list()
+max_y_value <- list()
+min_y_value <- list()
+for (track_val in unique(tabacco$track)) {
+  track_data <- filter(tabacco, track == track_val)
+  time <- seq(starting_hour, by = "1 hour", length.out = nrow(track_data))
+  track_data$time <- time
+  end_time <- ymd_hms("2023-12-12 17:00:00")
+  track_data <- track_data %>%
+      filter(time <= end_time)
+ 
+  
+ heatmap_plot <- ggplot(track_data, aes(x = Base_NT.x, y = Base_NT.y, color = frame_idx), size = 1) +
+  geom_point(aes(x = IN1_NT.x, y = IN1_NT.y, color = frame_idx), size = 1) +
+  geom_point(aes(x = IN2_NT.x, y = IN2_NT.y, color = frame_idx), size = 1) +
+  geom_point(aes(x = IN3_NT.x, y = IN3_NT.y, color = frame_idx), size = 1) +
+  
+  geom_point(aes(x = L1.x, y = L1.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_point(aes(x = L2.x, y = L2.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_point(aes(x = L3.x, y = L3.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_tile(linewidth = 2, height = 2) +
+  scale_y_reverse() +
+  scale_color_gradient(low = "#00f0af", high = "#238679") +
+  labs(x = "X", y = "Y") +
+  labs(title = paste("Visualisation of tabacco ", track_val))
+
+  
+   # Add labels for specific points
+   label_points <- c("Base_NT", "L1", "L2", "L3", "IN1_NT", "IN2_NT", "IN3_NT")
+   for (point in label_points) {
+     label_data <- create_labels(track_data, point)
+     heatmap_plot <- heatmap_plot +
+       geom_text(
+         data = label_data,
+         aes(x = label_positionx, y = label_positiony, label = label_value),
+         vjust = 0
+       )
+     if (point == "L1") {
+      min_x_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positionx"], na.rm = TRUE) - 5
+      max_x_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positionx"], na.rm = TRUE) + 200
+     }
+     if (point == "Base_NT") {
+      min_y_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positiony"], na.rm = TRUE) + 50
+     }
+   }
+   
+   heatmap_plots[[track_val]] <- heatmap_plot
+ 
+ 
+ # Print or display the individual heatmap plots
+for (i in seq_along(heatmap_plots)) {
+  
+   plot_data <- ggplot_build(heatmap_plots[[i]])$data[[1]]
+   if (position %% 2 == 0) {
+     heatmap_plots[[i]] <- heatmap_plots[[i]] + geom_text(aes(x = min_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[1]]),vjust=0) + geom_text(aes(x = max_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[2]]),vjust=0)
+   } else {
+     heatmap_plots[[i]] <- heatmap_plots[[i]] + geom_text(aes(x = min_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[2]]), vjust=0) + geom_text(aes(x = max_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[1]]), vjust = 0)
+   }
+   
+    print(heatmap_plots[[i]])
+ }
+ }
+```
+
+
+# Heatmap for changed days
+```{r heatmap changed days}
+heatmap_plots <- list()
+max_x_value <-list()
+min_x_value <- list()
+max_y_value <- list()
+min_y_value <- list()
+for (track_val in unique(tabacco$track)) {
+  track_data <- filter(tabacco, track == track_val)
+  time <- seq(starting_hour, by = "1 hour", length.out = nrow(track_data))
+  track_data$time <- time
+  start_time <- ymd_hms("2023-12-12 17:00:00")
+  track_data <- track_data %>%
+      filter(time >= start_time)
+ 
+  
+ heatmap_plot <- ggplot(track_data, aes(x = Base_NT.x, y = Base_NT.y, color = frame_idx), size = 1) +
+  geom_point(aes(x = IN1_NT.x, y = IN1_NT.y, color = frame_idx), size = 1) +
+  geom_point(aes(x = IN2_NT.x, y = IN2_NT.y, color = frame_idx), size = 1) +
+  geom_point(aes(x = IN3_NT.x, y = IN3_NT.y, color = frame_idx), size = 1) +
+  
+  geom_point(aes(x = L1.x, y = L1.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_point(aes(x = L2.x, y = L2.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_point(aes(x = L3.x, y = L3.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_tile(linewidth = 2, height = 2) +
+  scale_y_reverse() +
+  scale_color_gradient(low = "#00f0af", high = "#238679") +
+  labs(x = "X", y = "Y") +
+  labs(title = paste("Visualisation of tabacco ", track_val))
+
+  
+   # Add labels for specific points
+   label_points <- c("Base_NT", "L1", "L2", "L3", "IN1_NT", "IN2_NT", "IN3_NT")
+   for (point in label_points) {
+     label_data <- create_labels(track_data, point)
+     heatmap_plot <- heatmap_plot +
+       geom_text(
+         data = label_data,
+         aes(x = label_positionx, y = label_positiony, label = label_value),
+         vjust = 0
+       )
+     if (point == "L1") {
+      min_x_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positionx"], na.rm = TRUE) - 5
+      max_x_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positionx"], na.rm = TRUE) + 200
+     }
+     if (point == "Base_NT") {
+      min_y_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positiony"], na.rm = TRUE) + 50
+     }
+   }
+   
+   heatmap_plots[[track_val]] <- heatmap_plot
+ 
+ 
+ # Print or display the individual heatmap plots
+for (i in seq_along(heatmap_plots)) {
+  
+   plot_data <- ggplot_build(heatmap_plots[[i]])$data[[1]]
+   if (position %% 2 == 0) {
+     heatmap_plots[[i]] <- heatmap_plots[[i]] + geom_text(aes(x = min_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[1]]),vjust=0) + geom_text(aes(x = max_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[2]]),vjust=0)
+   } else {
+     heatmap_plots[[i]] <- heatmap_plots[[i]] + geom_text(aes(x = min_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[2]]), vjust=0) + geom_text(aes(x = max_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[1]]), vjust = 0)
+   }
+   
+    print(heatmap_plots[[i]])
+ }
+ }
+```
+
 
 # Heatmap day by day
 ```{r heatmap day by day}
-User
+heatmap_plots <- list()
+max_x_value <-list()
+min_x_value <- list()
+max_y_value <- list()
+min_y_value <- list()
 for (track_val in unique(tabacco$track)) {
   track_data <- filter(tabacco, track == track_val)
   time <- seq(starting_hour, by = "1 hour", length.out = nrow(track_data))
