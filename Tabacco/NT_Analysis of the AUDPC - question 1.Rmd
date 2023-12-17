@@ -3,6 +3,8 @@ title: "Analysis of the AUDPC (Area Under the Disease in Progress Cruve) "
 author: "Can Plant Think"
 date: "2023-12-05"
 output:
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -46,7 +48,7 @@ rownames(result_Student) <- c("shapiro_temoin_W","shapiro_temoin_p_value", "shap
 
 ```{r AUDPC_1, echo=FALSE}
 
-for (track in 1:2) {
+for (track in 0:2) {
   #creating a table of data with only one track at a time
   low = 4*track + 1
   high = low + 3
@@ -60,9 +62,14 @@ for (track in 1:2) {
   #transforming time in a different class so it's possible to plot
   track_data_t$time <- as.POSIXct(track_data_t$time, format = "%Y-%m-%d %H:%M:%S")
   track_data_p$time <- as.POSIXct(track_data_p$time, format = "%Y-%m-%d %H:%M:%S")
-
+  start_time <- ymd_hms("2023-12-10 17:00:00")
+  end_time <- ymd_hms("2023-12-11 17:00:00")
+  track_data_t_24h <- track_data_t %>%
+    filter(as.POSIXct(time) >= start_time, as.POSIXct(time) <= end_time)
+      
   #initializing the list "track" that will be added as a row later on in the result_aupdc_temoin
   track_t <- list(track = paste0("track_",track), "Angle.L1.Y" = 0, "Angle.L2.Y" = 0, "Angle.L3.Y" = 0, "Angle.IN3.Y" = 0)
+  track_t_i <- data.frame(track = rep(paste0("track_",track), times = 4), "Angle.L1.Y" = rep(0, times = 4), "Angle.L2.Y" = rep(0, times = 4), "Angle.L3.Y" = rep(0, times = 4), "Angle.IN3.Y" = rep(0, times = 4))
   track_p <- list(track = paste0("track_",track), "Angle.L1.Y" = 0, "Angle.L2.Y" = 0, "Angle.L3.Y" = 0, "Angle.IN3.Y" = 0)
   
   #plot
@@ -106,19 +113,29 @@ for (track in 1:2) {
   print(grid)
   
   #audpc
+  
+    for (day in 1:4) {
+      start_time <- ymd_hms("2023-12-08 17:00:00") + days(day - 1)
+      end_time <- ymd_hms("2023-12-08 17:00:00") + days(day)
+      day_data <- track_data_t %>%
+        filter(as.POSIXct(time) >= start_time, as.POSIXct(time) <= end_time)
+      for (i in 1:4) {
+      audpc_result_t <- ifelse(all(is.na(day_data[, i])), NA, audpc(day_data[, i], day_data$time, type = "absolute"))
+      track_t_i[day, i+1] <- audpc_result_t
+      }
+      }
   for (i in 1:4) {
-    audpc_result_t <- ifelse(all(is.na(track_data_t[, i])), NA, audpc(track_data_t[, i], track_data_t$time, type = "absolute"))
     audpc_result_p <- ifelse(all(is.na(track_data_p[, i])), NA, audpc(track_data_p[, i], track_data_p$time, type = "absolute"))
-    
-    track_t[i+1] <- audpc_result_t
     track_p[i+1] <- audpc_result_p
   }
+    track_t[2:5] <- colMeans(track_t_i[, -1], na.rm = TRUE)
   
   result_audpc_temoin <- rbind(result_audpc_temoin, track_t)
   result_audpc_perturb <- rbind(result_audpc_perturb, track_p)
 
 }
 print(result_audpc_temoin)
+print(result_audpc_perturb)
 ```
 
 ## Analysis of the results - Student test
