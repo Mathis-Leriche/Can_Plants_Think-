@@ -28,8 +28,10 @@ library(tidyverse)
 
 #Arabidopsis
 
-arabido <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\Autres dossiers\\Sup Agro\\2ème année\\Recherche\\R\\Arabidopsis_thaliana_training.AVI.predictions.000_Arabidopsis_thaliana_training.analysis.csv", header = TRUE, sep = ";")
-
+arabido <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\GitHub\\Artificial intelligence\\Can_Plants_Think-\\Arabidopsis\\AT_S2_P6.csv", header = TRUE, sep = ",")
+starting_hour <- as.POSIXct("2023-12-08 17:00:00")
+label_compass <- c("East", "West")
+position <- 6
 ```
 
 ## Fonction for labelling
@@ -45,7 +47,7 @@ create_labels <- function(arabido, point_name) {
     group_by(track) %>% 
     summarise(
       label_positionx = max(get(paste0(point_name, ".x"))),
-      label_positiony = max(get(paste0(point_name, ".y"))),
+      label_positiony = min(get(paste0(point_name, ".y")))-5,
       label_value = point_name
     ) %>%
     merge(arabido[, c("track", "frame_idx")], by = "track", all.x = TRUE)
@@ -58,23 +60,41 @@ create_labels <- function(arabido, point_name) {
 ## Heatmap plots
 # Arabidopsis
 
-```{r heatmap}
+# Heatmap for normal days
+```{r heatmap normal days}
+heatmap_plots <- list()
+max_x_value <-list()
+min_x_value <- list()
+max_y_value <- list()
+min_y_value <- list()
 for (track_val in unique(arabido$track)) {
   track_data <- filter(arabido, track == track_val)
+  time <- seq(starting_hour, by = "1 hour", length.out = nrow(track_data))
+  track_data$time <- time
+  end_time <- ymd_hms("2023-12-12 17:00:00")
+  track_data <- track_data %>%
+      filter(time <= end_time)
+ 
   
-  heatmap_plot <- ggplot(track_data, aes(x = Leaf_1E.x, y = Leaf_1E.y, color = frame_idx)) +
-    geom_point(aes(x = Leaf_4E.x, y = Leaf_4E.y, color = frame_idx), size = 1) +
-    geom_point(aes(x = Leaf_2I.x, y = Leaf_2I.y, color = frame_idx), size = 1) +
-    geom_point(aes(x = Leaf_3I.x, y = Leaf_3I.y, color = frame_idx), size = 1) +
-    geom_point(aes(x = Base_AT.x, y = Base_AT.y, color = frame_idx), size = 1) +
-    geom_point(size = 1) +
-    geom_tile(linewidth = 2, height = 2) +
-    scale_color_gradient(low = "#00f0af", high = "#238679") +
-    labs(x = "X", y = "Y") +
-    labs(title = paste("Position of arabisopsis in", track_val))
+ heatmap_plot <- ggplot(track_data, aes(x = Base_AT.x, y = Base_AT.y, color = frame_idx), size = 1) +
   
-  # Add labels for specific points
-  label_points <- c("Base_AT", "Leaf_1E", "Leaf_2I", "Leaf_3I", "Leaf_4E")
+  geom_point(aes(x = Leaf_1E.x, y = Leaf_1E.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_point(aes(x = Leaf_4E.x, y = Leaf_4E.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_point(aes(x = Leaf_2I.x, y = Leaf_2I.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_point(aes(x = Leaf_3I.x, y = Leaf_3I.y, color = frame_idx), shape = 17, size = 1) +
+   
+  geom_tile(linewidth = 2, height = 2) +
+  scale_y_reverse() +
+  scale_color_gradient(low = "#00f0af", high = "#238679") +
+  labs(x = "X", y = "Y") +
+  labs(title = paste("Visualisation of arabidopsis ", track_val))
+
+  
+   # Add labels for specific points
+   label_points <- c("Base_AT", "Leaf_1E", "Leaf_2I", "Leaf_3I", "Leaf_4E")
   for (point in label_points) {
     label_data <- create_labels(track_data, point)
     heatmap_plot <- heatmap_plot +
@@ -83,14 +103,190 @@ for (track_val in unique(arabido$track)) {
         aes(x = label_positionx, y = label_positiony, label = label_value),
         vjust = 0
       )
-  }
-  
-  heatmap_plots[[track_val]] <- heatmap_plot
-}
-
-# Print or display the individual heatmap plots
+     if (point == "Leaf_1E") {
+      min_x_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positionx"], na.rm = TRUE) - 5
+      max_x_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positionx"], na.rm = TRUE) + 200
+     }
+     if (point == "Base_AT") {
+      min_y_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positiony"], na.rm = TRUE) + 50
+     }
+   }
+   
+   heatmap_plots[[track_val]] <- heatmap_plot
+ 
+ 
+ # Print or display the individual heatmap plots
 for (i in seq_along(heatmap_plots)) {
-  print(heatmap_plots[[i]])
-}
+  
+   plot_data <- ggplot_build(heatmap_plots[[i]])$data[[1]]
+   if (position %% 2 == 0) {
+     heatmap_plots[[i]] <- heatmap_plots[[i]] + geom_text(aes(x = min_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[1]]),vjust=0) + geom_text(aes(x = max_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[2]]),vjust=0)
+   } else {
+     heatmap_plots[[i]] <- heatmap_plots[[i]] + geom_text(aes(x = min_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[2]]), vjust=0) + geom_text(aes(x = max_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[1]]), vjust = 0)
+   }
+   
+    
+ }
+  print(heatmap_plots[[track_val]])
+ }
+```
+
+
+# Heatmap for changed days
+```{r heatmap changed days}
+heatmap_plots <- list()
+max_x_value <-list()
+min_x_value <- list()
+max_y_value <- list()
+min_y_value <- list()
+for (track_val in unique(arabido$track)) {
+  track_data <- filter(arabido, track == track_val)
+  time <- seq(starting_hour, by = "1 hour", length.out = nrow(track_data))
+  track_data$time <- time
+  start_time <- ymd_hms("2023-12-12 17:00:00")
+  track_data <- track_data %>%
+      filter(time >= start_time)
+ 
+  
+ heatmap_plot <- ggplot(track_data, aes(x = Base_AT.x, y = Base_AT.y, color = frame_idx), size = 1) +
+  
+  geom_point(aes(x = Leaf_1E.x, y = Leaf_1E.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_point(aes(x = Leaf_4E.x, y = Leaf_4E.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_point(aes(x = Leaf_2I.x, y = Leaf_2I.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_point(aes(x = Leaf_3I.x, y = Leaf_3I.y, color = frame_idx), shape = 17, size = 1) +
+   
+  geom_tile(linewidth = 2, height = 2) +
+  scale_y_reverse() +
+  scale_color_gradient(low = "#00f0af", high = "#238679") +
+  labs(x = "X", y = "Y") +
+  labs(title = paste("Visualisation of arabidopsis ", track_val))
+
+  
+   # Add labels for specific points
+   label_points <- c("Base_AT", "Leaf_1E", "Leaf_2I", "Leaf_3I", "Leaf_4E")
+  for (point in label_points) {
+    label_data <- create_labels(track_data, point)
+    heatmap_plot <- heatmap_plot +
+      geom_text(
+        data = label_data,
+        aes(x = label_positionx, y = label_positiony, label = label_value),
+        vjust = 0
+      )
+     if (point == "Leaf_1E") {
+      min_x_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positionx"], na.rm = TRUE) - 5
+      max_x_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positionx"], na.rm = TRUE) + 200
+     }
+     if (point == "Base_AT") {
+      min_y_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positiony"], na.rm = TRUE) + 50
+     }
+   }
+   
+   heatmap_plots[[track_val]] <- heatmap_plot
+ 
+ 
+ # Print or display the individual heatmap plots
+for (i in seq_along(heatmap_plots)) {
+  
+   plot_data <- ggplot_build(heatmap_plots[[i]])$data[[1]]
+   if (position %% 2 == 0) {
+     heatmap_plots[[i]] <- heatmap_plots[[i]] + geom_text(aes(x = min_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[1]]),vjust=0) + geom_text(aes(x = max_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[2]]),vjust=0)
+   } else {
+     heatmap_plots[[i]] <- heatmap_plots[[i]] + geom_text(aes(x = min_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[2]]), vjust=0) + geom_text(aes(x = max_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[1]]), vjust = 0)
+   }
+   
+    
+ }
+  print(heatmap_plots[[track_val]])
+ }
+```
+
+
+# Heatmap day by day
+```{r heatmap day by day}
+heatmap_plots <- list()
+max_x_value <-list()
+min_x_value <- list()
+max_y_value <- list()
+min_y_value <- list()
+for (track_val in unique(arabido$track)) {
+  track_data <- filter(arabido, track == track_val)
+  time <- seq(starting_hour, by = "1 hour", length.out = nrow(track_data))
+  track_data$time <- time
+  
+  for (day in 1:7) {
+    if (day <6) {
+    start_time <- ymd_hms("2023-12-08 17:00:00") + days(day - 1)
+    end_time <- ymd_hms("2023-12-08 17:00:00") + days(day)
+    } else if (day == 6) {
+    start_time <- ymd_hms("2023-12-12 17:00:00")
+    end_time <- ymd_hms("2023-12-13 06:00:00")
+    } else {
+    start_time <- ymd_hms("2023-12-13 06:00:00")
+    end_time <- ymd_hms("2023-12-13 17:00:00")  
+    }
+      
+    day_data <- track_data %>%
+      filter(time >= start_time, time <= end_time)
+    day_data$frame_idx <- seq(1, by = 1, length.out = nrow(day_data)) 
+  
+ heatmap_plot <- ggplot(day_data, aes(x = Base_AT.x, y = Base_AT.y, color = frame_idx), size = 1) +
+  
+  geom_line(aes(x = Leaf_1E.x, y = Leaf_1E.y), color = 'grey') +
+  geom_point(aes(x = Leaf_1E.x, y = Leaf_1E.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_line(aes(x = Leaf_2I.x, y = Leaf_2I.y), color = 'grey') +
+  geom_point(aes(x = Leaf_2I.x, y = Leaf_2I.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_line(aes(x = Leaf_3I.x, y = Leaf_3I.y), color = 'grey') +
+  geom_point(aes(x = Leaf_3I.x, y = Leaf_3I.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_line(aes(x = Leaf_4E.x, y = Leaf_4E.y), color = 'grey') +
+  geom_point(aes(x = Leaf_4E.x, y = Leaf_4E.y, color = frame_idx), shape = 17, size = 1) +
+  
+  geom_tile(linewidth = 2, height = 2) +
+  scale_y_reverse() +
+  scale_color_gradient(low = "#00f0af", high = "#238679") +
+  labs(x = "X", y = "Y") +
+  labs(title = paste("Visualisation of arabidopsis ", track_val, "on day", day))
+
+  
+   # Add labels for specific points
+   label_points <- c("Base_AT", "Leaf_1E", "Leaf_2I", "Leaf_3I", "Leaf_4E")
+   for (point in label_points) {
+     label_data <- create_labels(track_data, point)
+     heatmap_plot <- heatmap_plot +
+       geom_text(
+         data = label_data,
+         aes(x = label_positionx, y = label_positiony, label = label_value),
+         vjust = 0
+       )
+     if (point == "Leaf_1E") {
+      min_x_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positionx"], na.rm = TRUE) - 5
+      max_x_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positionx"], na.rm = TRUE) + 200
+     }
+     if (point == "Base_AT") {
+      min_y_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positiony"], na.rm = TRUE) + 50
+     }
+   }
+   
+   heatmap_plots[[day]] <- heatmap_plot
+ }
+ 
+ # Print or display the individual heatmap plots
+for (i in seq_along(heatmap_plots)) {
+  
+   plot_data <- ggplot_build(heatmap_plots[[i]])$data[[1]]
+   if (position %% 2 == 0) {
+     heatmap_plots[[i]] <- heatmap_plots[[i]] + geom_text(aes(x = min_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[1]]),vjust=0) + geom_text(aes(x = max_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[2]]),vjust=0)
+   } else {
+     heatmap_plots[[i]] <- heatmap_plots[[i]] + geom_text(aes(x = min_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[2]]), vjust=0) + geom_text(aes(x = max_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[1]]), vjust = 0)
+   }
+   
+    print(heatmap_plots[[i]])
+ }
+ }
 ```
 
