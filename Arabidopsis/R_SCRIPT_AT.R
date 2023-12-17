@@ -13,9 +13,9 @@ library(geometry)
 library(tidyverse)
 
 ###data importation
-project.dir<-"D:\Timelapse\Arabidopsis_Training" #Don't forget to change the directory depending on the file you are working on
+project.dir<-"C:\\Users\\33646\\OneDrive\\Documents\\GitHub\\Artificial intelligence\\Can_Plants_Think-\\Arabidopsis"
 
-AT_Data_tr<-read.csv(file='AT_Data_training.csv', header=TRUE, sep= ';')
+AT_Data_tr<-read.csv(file='C:\\Users\\33646\\OneDrive\\Documents\\GitHub\\Artificial intelligence\\Can_Plants_Think-\\Arabidopsis\\AT_S2_P1.csv', header=TRUE, sep= ',')
 
 
 ###Pre-visualisation
@@ -23,10 +23,10 @@ AT_Data_tr<-read.csv(file='AT_Data_training.csv', header=TRUE, sep= ';')
 summary (AT_Data_tr)
 
 #To separate the column for each plants 
-plante_1=AT_Data_tr[AT_Data_tr$track=="track_0",]
-plante_2=AT_Data_tr[AT_Data_tr$track=="track_1",]
-plante_3=AT_Data_tr[AT_Data_tr$track=="track_2",]
-plante_4=AT_Data_tr[AT_Data_tr$track=="track_3",]
+plante_1=AT_Data_tr[AT_Data_tr$track=="1",]
+plante_2=AT_Data_tr[AT_Data_tr$track=="2",]
+plante_3=AT_Data_tr[AT_Data_tr$track=="3",]
+plante_4=AT_Data_tr[AT_Data_tr$track=="4",]
 
 #To figure out the number of rows for each plants
 nrow(plante_1)
@@ -37,11 +37,11 @@ nrow(plante_4)
 ###To compute the vectors from the coordinates
 
 ##Convert data to a geometry object : To make points
-Base <- as.matrix(AT_Data_tr %>% select(Base_AT.x, Base_AT.y))
-Leaf_1E <- as.matrix(AT_Data_tr %>% select(Leaf_1E.x, Leaf_1E.y))
-Leaf_2I <- as.matrix(AT_Data_tr %>% select(Leaf_2I.x, Leaf_2I.y))
-Leaf_3I <- as.matrix(AT_Data_tr %>% select(Leaf_3I.x, Leaf_3I.y))
-Leaf_4E <- as.matrix(AT_Data_tr %>% select(Leaf_4E.x, Leaf_4E.y))
+Base <- as.matrix(AT_Data_tr %>% select(Base.x, Base.y))
+Leaf_1E <- as.matrix(AT_Data_tr %>% select(Leaf_E1.x, Leaf_E1.y))
+Leaf_2I <- as.matrix(AT_Data_tr %>% select(Leaf_I2.x, Leaf_I2.y))
+Leaf_3I <- as.matrix(AT_Data_tr %>% select(Leaf_I3.x, Leaf_I3.y))
+Leaf_4E <- as.matrix(AT_Data_tr %>% select(Leaf_E4.x, Leaf_E4.y))
 
 # Function to compute vectors between points
 'DO NOT TOUCH THIS FUNCTION (it bites)'
@@ -59,7 +59,7 @@ vector_E <- compute_vectors(Leaf_1E, Leaf_4E)
 vector_I <- compute_vectors(Leaf_2I, Leaf_3I)
 
 # Ref vectors : don't forget to adapt the number of rows
-y_axis_vector <- cbind(rep(0, 7204), rep(1, 7204))#reference : 7204 is the number of rows in each vectors
+y_axis_vector <- cbind(rep(0, 456), rep(1, 456))#reference : 7204 is the number of rows in each vectors
 colnames(y_axis_vector) <- c("OY.x", "OY.y")
 
 # Print the results (Not mandatory)
@@ -105,10 +105,10 @@ angles_list[[3]] <- angles_degrees_E.Y
 angles_list[[4]] <- angles_degrees_I.Y
 
 #Making dataframes out of the lists
-angles_df_1E.4E <- data.frame(Vector = paste("angle_1E.4E"), Angle = angles_degrees_1E.4E)
-angles_df_2I.3I <- data.frame(Vector = paste("angle_2I.3I"), Angle = angles_degrees_2I.3I)
-angles_df_E.Y <- data.frame(Vector = paste("angle_E.Y"), Angle = angles_degrees_E.Y)
-angles_df_I.Y <- data.frame(Vector = paste("angle_I.Y"), Angle = angles_degrees_I.Y)
+angles_df_1E.4E <- data.frame(angle_1E.4E = angles_degrees_1E.4E)
+angles_df_2I.3I <- data.frame(angle_2I.3I = angles_degrees_2I.3I)
+angles_df_E.Y <- data.frame(angle_E.Y = angles_degrees_E.Y)
+angles_df_I.Y <- data.frame(angle_I.Y = angles_degrees_I.Y)
 
 #Making lists out of those dataframes
 angles_df_list[[1]] <- angles_df_1E.4E
@@ -119,47 +119,32 @@ angles_df_list[[4]] <- angles_df_I.Y
 #This combine the four list 
 result_df <- do.call(cbind, angles_df_list)
 
-#We put our data in a csv file so as to analyze it later in the code
-write.csv(result_df, "angles_result.csv", row.names = FALSE)
-
-##Reorganization of the data so as to have what we want
-#New importation
-AT_angles_data<-read.csv(file='angles_result.csv', header=TRUE, sep= ',')
-
-#We put the name of the angle in the label of each angle columns
-AT_angle_table <- AT_angles_data %>%
-  pivot_wider(names_from = Vector, values_from = Angle)
-
-#Now we have an angle by row instead of a list of angles in a single row
-AT_angle_table <- AT_angle_table %>%
-  unnest(cols = starts_with("Angle"))
-
 #From the table created, we separate the angle from each individuals (repetition)
-ind_1<-AT_angle_table %>%
-  slice(1:1801)%>%
+ind_1<-result_df %>%
+  filter(row_number() %% 4 == 1) %>%
   rename_all(~paste0("ind_1_", .))
 
-ind_2<-AT_angle_table %>%
-  slice(1802:3602)%>%
+ind_2<-result_df %>%
+  filter(row_number() %% 4 == 2) %>%
   rename_all(~paste0("ind_2_", .))
 
-ind_3<-AT_angle_table %>%
-  slice(3603:5403)%>%
+ind_3<-result_df %>%
+  filter(row_number() %% 4 == 3) %>%
   rename_all(~paste0("ind_3_", .))
 
-ind_4<-AT_angle_table %>%
-  slice(5404:7204)%>%
+ind_4<-result_df %>%
+  filter(row_number() %% 4 == 0) %>%
   rename_all(~paste0("ind_4_", .))
 
 #We put them together by columns
 Final_table<-cbind(ind_1,ind_2,ind_3,ind_4)
 
 # We set up a time sequence 
-starting_hour <- as.POSIXct("2023-01-01 00:00:00", tz = "UTC")
-interval_30s <- seq(starting_hour, by = "30 sec", length.out = nrow(Final_table))
+starting_hour <- as.POSIXct("2023-12-08 16:00:00", tz = "UTC")
+interval_1h <- seq(starting_hour, by = "1 hour", length.out = nrow(Final_table))
 
 # We add the "time" column to "final_table"
-Final_table$time <- interval_30s
+Final_table$time <- interval_1h
 
 #Add the mean of each angle
 
@@ -182,4 +167,4 @@ print(total_mean_angle)
 print(Final_table)
 
 #LAST CSV WITH THE RESULTS
-write.csv(Final_table, "ATS1P2_angles_result_training.csv", row.names = FALSE)
+write.csv(Final_table, "ATS2P1_angles.csv", row.names = FALSE)
