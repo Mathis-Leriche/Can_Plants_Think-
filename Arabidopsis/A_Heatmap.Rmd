@@ -74,7 +74,7 @@ for (track_val in unique(arabido$track)) {
   end_time <- ymd_hms("2023-12-12 17:00:00")
   track_data <- track_data %>%
       filter(time <= end_time)
- 
+  track_data$frame_idx <- seq(1, by = 1, length.out = nrow(track_data)) 
   
  heatmap_plot <- ggplot(track_data, aes(x = Base_AT.x, y = Base_AT.y, color = frame_idx), size = 1) +
   

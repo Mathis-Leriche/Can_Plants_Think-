@@ -63,23 +63,23 @@ for (track in 0:2) {
   #transforming time in a different class so it's possible to plot
   track_data_t$time <- as.POSIXct(track_data_t$time, format = "%Y-%m-%d %H:%M:%S")
   track_data_p$time <- as.POSIXct(track_data_p$time, format = "%Y-%m-%d %H:%M:%S")
-  start_time <- ymd_hms("2023-12-11 17:00:00")
+  start_time <- ymd_hms("2023-12-08 17:00:00")
   end_time <- ymd_hms("2023-12-12 17:00:00")
   track_data_t_24h <- track_data_t %>%
     filter(as.POSIXct(time) >= start_time, as.POSIXct(time) <= end_time)
   if (track == 0) {
-        track_t_compass <- data.frame("Angle East.Y" = track_data_t_24h[[1]],"Angle West.Y" = track_data_t_24h[[2]], "Angle IN3.Y" = track_data_t_24h[[4]], "time" = track_data_t_24h$time)
+        track_t_compass <- data.frame("Angle East.Y" = track_data_t[[1]],"Angle West.Y" = track_data_t[[2]], "Angle IN3.Y" = track_data_t[[4]], "time" = track_data_t$time)
         track_p_compass <- data.frame("Angle East.Y" = track_data_p[[1]],"Angle West.Y" = track_data_p[[2]], "Angle IN3.Y" = track_data_p[[4]], "time" = track_data_p$time)
       }
     if (track == 1) {
-        East_or_west <- rowMeans(cbind(track_data_t_24h[[1]], track_data_t_24h[[3]]), na.rm = TRUE)
-        track_t_compass <- data.frame("Angle East.Y" = track_data_t_24h[[2]],"Angle West.Y" = East_or_west, "Angle IN3.Y" = track_data_t_24h[[4]], "time" = track_data_t_24h$time)
+        East_or_west <- rowMeans(cbind(track_data_t[[1]], track_data_t[[3]]), na.rm = TRUE)
+        track_t_compass <- data.frame("Angle East.Y" = track_data_t[[2]],"Angle West.Y" = East_or_west, "Angle IN3.Y" = track_data_t[[4]], "time" = track_data_t$time)
         East_or_west_p <- rowMeans(cbind(track_data_p[[1]], track_data_p[[3]]), na.rm = TRUE)
         track_p_compass <- data.frame("Angle East.Y" = track_data_p[[2]],"Angle West.Y" = East_or_west_p, "Angle IN3.Y" = track_data_p[[4]], "time" = track_data_p$time)
     }
     if (track == 2) {
-        East_or_west <- rowMeans(cbind(track_data_t_24h[[1]], track_data_t_24h[[3]]), na.rm = TRUE)
-        track_t_compass <- data.frame("Angle East.Y" = East_or_west,"Angle West.Y" = track_data_t_24h[[2]], "Angle IN3.Y" = track_data_t_24h[[4]], "time" = track_data_t_24h$time)
+        East_or_west <- rowMeans(cbind(track_data_t[[1]], track_data_t[[3]]), na.rm = TRUE)
+        track_t_compass <- data.frame("Angle East.Y" = East_or_west,"Angle West.Y" = track_data_t[[2]], "Angle IN3.Y" = track_data_t[[4]], "time" = track_data_t$time)
         East_or_west_p <- rowMeans(cbind(track_data_p[[1]], track_data_p[[3]]), na.rm = TRUE)
         track_p_compass <- data.frame("Angle East.Y" = East_or_west_p,"Angle West.Y" = track_data_p[[2]], "Angle IN3.Y" = track_data_p[[4]], "time" = track_data_p$time)
     }
@@ -101,8 +101,8 @@ for (track in 0:2) {
     plot_t <- plot_t + geom_line(aes(y = track_t_compass[, "Angle.IN3.Y"], color = "Angle.IN3.Y"), size = 1)
   }
     plot_t <- plot_t + 
-      scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd")) + 
-      labs(title = paste("Angle against time in tobacco ", track + 1, "in normal conditions"), x = "Time", y ="Angle")
+      scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd"))
+
   
       
   plot_p <- ggplot(data = track_p_compass, aes(x = time))
@@ -117,12 +117,15 @@ for (track in 0:2) {
     plot_p <- plot_p + geom_line(aes(y = track_p_compass[, "Angle.IN3.Y"], color = "Angle.IN3.Y"), size = 1)
   }
   plot_p <- plot_p + 
-    scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd")) + 
-    labs(title = paste("Angle against time in tobacco ", track + 1, "in changed conditions"), x = "Time", y = "Angle")
+    scale_color_manual(name = "Angle", values = c("#e78847","#05a894", "#dda0dd"))
   
-  grid <- plot_t + plot_p + plot_layout(ncol = 1, heights = c(1, 1)) +
-  plot_annotation(title = paste("Difference in angles between normal and changed conditions in tobacco ",track+1))
+  grid <- plot_t + plot_p + plot_layout(ncol = 1, heights = c(1, 1))
+ 
   print(grid)
+  
+  if (track == 2) {
+    ggsave("graph_600dpi.png", plot = grid, dpi = 600)
+  }
 }
 ```
 
@@ -188,7 +191,7 @@ print(result_audpc_perturb)
 
 ```{r cinetic}
 result_cinetic <- data.frame("Angle Leaf_West.Y" = rep(0, times = 7), "Angle Leaf_East.Y" = rep(0, times = 7), stringsAsFactors = FALSE)
-rownames(result_cinetic) <- c("track 1 vitesse angulaire (en °/heure)","track 1 max","track 1 min","track 2 vitesse angulaire (en °/heure)","track 2 max",  "track 2 min",  "moyenne des vitesses angulaires")
+rownames(result_cinetic) <- c("Individual 1 angular speed (°/hour)","Individual 1 max","Individual 1 min","Individual 2 angular speed (°/hour)","Individual 2 max",  "Individual 2 min",  "Mean angular speed")
 
 for (track in 1:2) {
   low = 4*track + 1

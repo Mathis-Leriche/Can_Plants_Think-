@@ -123,6 +123,9 @@ for (i in seq_along(heatmap_plots)) {
    }
    
     print(heatmap_plots[[i]])
+    if (i == 3) {
+      ggsave("my_plot_400dpi.png", plot = heatmap_plots[[i]], dpi = 600)
+    }
  }
  }
 ```

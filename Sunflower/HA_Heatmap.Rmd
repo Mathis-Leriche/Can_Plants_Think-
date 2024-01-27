@@ -25,7 +25,10 @@ library(tidyverse)
 
 #Sunflower
 
-sun <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\Autres dossiers\\Sup Agro\\2ème année\\Recherche\\R\\Arabidopsis_thaliana_training.AVI.predictions.000_Arabidopsis_thaliana_training.analysis.csv", header = TRUE, sep = ";")
+sun <- read.csv("C:\\Users\\33646\\OneDrive\\Documents\\GitHub\\Artificial intelligence\\Can_Plants_Think-\\Sunflower\\HA_S2_P5.csv", header = TRUE, sep = ",")
+starting_hour <- as.POSIXct("2023-12-08 17:00:00")
+label_compass <- c("East", "West")
+position <- 5
 
 ```
 
@@ -42,7 +45,7 @@ create_labels <- function(sun, point_name) {
     group_by(track) %>% 
     summarise(
       label_positionx = max(get(paste0(point_name, ".x"))),
-      label_positiony = max(get(paste0(point_name, ".y"))),
+      label_positiony = min(get(paste0(point_name, ".y"))),
       label_value = point_name
     ) %>%
     merge(sun[, c("track", "frame_idx")], by = "track", all.x = TRUE)
@@ -56,24 +59,32 @@ create_labels <- function(sun, point_name) {
 #Tournesol
 
 ```{r heatmap}
+heatmap_plots <- list()
+max_x_value <-list()
+min_x_value <- list()
+max_y_value <- list()
+min_y_value <- list()
+
 for (track_val in unique(sun$track)) {
   track_data <- filter(sun, track == track_val)
+  track_data$frame_idx <- seq(1, by = 1, length.out = nrow(track_data)) 
   
   heatmap_plot <- ggplot(track_data, aes(x = L1_G.x, y = L1_G.y, color = frame_idx)) +
     geom_point(aes(x = L1_D.x, y = L1_D.y, color = frame_idx), size = 1) +
     geom_point(aes(x = L2_G.x, y = L2_G.y, color = frame_idx), size = 1) +
     geom_point(aes(x = L2_D.x, y = L2_D.y, color = frame_idx), size = 1) +
     geom_point(aes(x = Base_HA.x, y = Base_HA.y, color = frame_idx), size = 1) +
-    geom_point(aes(x = IN1_HA.x, y = IN1_HA.y, color = frame_idx), size = 1) +
-    geom_point(aes(x = IN2_HA.x, y = IN2_HA.y, color = frame_idx), size = 1) +
+    geom_point(aes(x = IN1.x, y = IN1.y, color = frame_idx), size = 1) +
+    geom_point(aes(x = IN2.x, y = IN2.y, color = frame_idx), size = 1) +
     geom_point(size = 1) +
     geom_tile(linewidth = 2, height = 2) +
     scale_color_gradient(low = "#00f0af", high = "#238679") +
+    scale_y_reverse() +
     labs(x = "X", y = "Y") +
-    labs(title = paste("Position of sunflowers in", track_val))
+    labs(title = paste("Position of sunflowers ", track_val))
   
   # Add labels for specific points
-  label_points <- c("Base_HA", "L1_D", "L2_D", "L1_G", "L2_G", "IN1_HA", "IN2_HA")
+  label_points <- c("Base_HA", "L1_D", "L2_D", "L1_G", "L2_G", "IN1", "IN2")
   for (point in label_points) {
     label_data <- create_labels(track_data, point)
     heatmap_plot <- heatmap_plot +
@@ -82,6 +93,12 @@ for (track_val in unique(sun$track)) {
         aes(x = label_positionx, y = label_positiony, label = label_value),
         vjust = 0
       )
+    if (point == "L1_G") {
+      min_x_value[[track_val]] <- min(label_data[label_data$track == track_val, "label_positionx"], na.rm = TRUE) - 5
+      max_x_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positionx"], na.rm = TRUE) + 300
+     }
+     if (point == "Base_HA") {
+      min_y_value[[track_val]] <- max(label_data[label_data$track == track_val, "label_positiony"], na.rm = TRUE) + 50
   }
   
   heatmap_plots[[track_val]] <- heatmap_plot
@@ -89,7 +106,16 @@ for (track_val in unique(sun$track)) {
 
 # Print or display the individual heatmap plots
 for (i in seq_along(heatmap_plots)) {
-  print(heatmap_plots[[i]])
+  
+   plot_data <- ggplot_build(heatmap_plots[[i]])$data[[1]]
+   if (position %% 2 == 0) {
+     heatmap_plots[[i]] <- heatmap_plots[[i]] + geom_text(aes(x = min_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[1]]),vjust=0) + geom_text(aes(x = max_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[2]]),vjust=0)
+   } else {
+     heatmap_plots[[i]] <- heatmap_plots[[i]] + geom_text(aes(x = min_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[2]]), vjust=0) + geom_text(aes(x = max_x_value[[track_val]], y = min_y_value[[track_val]], label = label_compass[[1]]), vjust = 0)
+   }
+   
+    print(heatmap_plots[[i]])
+ }
 }
 ```
 
